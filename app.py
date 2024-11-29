@@ -30,6 +30,8 @@ with st.sidebar:
 
 def main():
     st.header("Chat with your own PDF")
+    
+    # File upload
     pdf = st.file_uploader("Upload your PDF", type="pdf")
     
     if pdf is not None:
@@ -50,18 +52,19 @@ def main():
         embeddings = OpenAIEmbeddings()
         vector_store = Redis.from_texts(texts, embeddings, redis_url="redis://localhost:6379")
 
-        # Query input
+        # Input query from user
         query = st.text_input("Ask questions related to your PDF")
 
         if query:
+            # Perform similarity search in Redis
             results = vector_store.similarity_search(query=query, k=3)
-
-            # Initialize OpenAI LLM for answering questions
-            llm = OpenAI(api_key=openai_api_key)  # Make sure to pass the API key
+            
+            # Initialize LLM and QA chain
+            llm = OpenAI()
             chain = load_qa_chain(llm=llm, chain_type="stuff")
             response = chain.run(input_documents=results, question=query)
-
-            # Display the response
+            
+            # Display response
             st.write(response)
 
 if __name__ == '__main__':
